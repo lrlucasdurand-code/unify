@@ -12,6 +12,12 @@ git pull origin main
 #    --build forces a rebuild (crucial for Next.js frontend if code changed)
 #    -d runs in detached mode
 echo "🛠 Building and Restarting containers..."
+
+# Ensure backend has the .env file
+if [ -f .env ]; then
+    cp .env backend/.env
+fi
+
 docker compose up --build -d
 
 # 3. Cleanup unused images (optional, keeps disk clean)
