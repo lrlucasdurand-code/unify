@@ -9,6 +9,13 @@ if not database_url:
     engine = create_engine(database_url, echo=True, connect_args=connect_args)
 else:
     # Postgres
+    # Ensure usage of psycopg2 driver explicitly
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    
+    if database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        
     engine = create_engine(database_url, echo=True)
 
 def create_db_and_tables():
