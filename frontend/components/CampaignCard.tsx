@@ -8,7 +8,7 @@ interface CampaignCardProps {
 
 export function CampaignCard({ campaign }: CampaignCardProps) {
     const { name, metrics, budget_recommendation, current_budget } = campaign;
-    const percentage = Math.min(100, (metrics.actual / metrics.objective) * 100);
+    const percentage = (metrics.actual / metrics.objective) * 100;
 
     const actionColor =
         budget_recommendation.action === "INCREASE" ? "text-green-400 bg-green-400/10 border-green-400/20 shadow-[0_0_15px_rgba(74,222,128,0.2)]" :
@@ -19,6 +19,16 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
         budget_recommendation.action === "INCREASE" ? ArrowUpRight :
             budget_recommendation.action === "DECREASE" ? ArrowDownRight :
                 Minus;
+
+    const formatMetric = (val: number, type: string) => {
+        if (type === "CVR" || type.includes("Rate") || type.includes("%")) {
+            // Heuristic: if value > 1, assume it's already percentage (e.g. 7.5 for 7.5%)
+            // if value <= 1, assume it's decimal (e.g. 0.075 for 7.5%)
+            if (val > 1) return `${val.toFixed(2)}%`;
+            return `${(val * 100).toFixed(2)}%`;
+        }
+        return `$${val.toLocaleString()}`;
+    };
 
     return (
         <div className="relative group">
@@ -53,20 +63,16 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
                             {/* Fill */}
                             <div
                                 className="h-full bg-gradient-to-r from-indigo-500 via-primary to-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"
-                                style={{ width: `${percentage}%`, transition: "width 1.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
+                                style={{ width: `${Math.min(100, percentage)}%`, transition: "width 1.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
                             />
                         </div>
 
                         <div className="flex justify-between text-[11px] mt-2 text-muted-foreground font-mono">
                             <span>
-                                {metrics.name === "CVR"
-                                    ? `${(metrics.actual * 100).toFixed(2)}%`
-                                    : `$${metrics.actual.toLocaleString()}`}
+                                {formatMetric(metrics.actual, metrics.name || "")}
                             </span>
                             <span>
-                                TARGET: {metrics.name === "CVR"
-                                    ? `${(metrics.objective * 100).toFixed(2)}%`
-                                    : `$${metrics.objective.toLocaleString()}`}
+                                TARGET: {formatMetric(metrics.objective, metrics.name || "")}
                             </span>
                         </div>
                     </div>

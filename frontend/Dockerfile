@@ -19,7 +19,12 @@ COPY . .
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
+# Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED 1
+
+ARG NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID
+ENV NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID=$NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID
+ENV NEXT_PUBLIC_API_URL=http://localhost:8000
 
 RUN npm run build
 

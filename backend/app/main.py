@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Dict, Any, Optional
 import sys
 import os
@@ -103,6 +103,23 @@ class AdPlatforms(BaseModel):
 
 class CRMConfig(BaseModel):
     enabled: bool
+
+class ContactForm(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str
+    message: Optional[str] = None
+
+@app.post("/contact")
+def contact_sales(form: ContactForm):
+    # Simulation: Log the email content
+    print(f"--- [MOCK EMAIL SENT] ---")
+    print(f"To: lr.lucasdurand@gmail.com")
+    print(f"From: {form.email} ({form.name})")
+    print(f"Phone: {form.phone}")
+    print(f"Message: {form.message}")
+    print(f"-------------------------")
+    return {"message": "Email sent successfully"}
 
 class CRMProviders(BaseModel):
     hubspot: Optional[CRMConfig] = None
@@ -384,40 +401,24 @@ class CheckoutRequest(BaseModel):
 
 @app.get("/api/global-status")
 def get_global_status(current_user: User = Depends(get_current_user)):
-    """Returns the current global capacity vs actual usage."""
+    """Returns the Volume performance targets."""
     config = load_config_from_db(current_user)
-    sales_connector, ad_connector = get_connectors(config)
+    sales_connector, _ = get_connectors(config)
     
     # 1. Fetch Sales Payload
     sales_payload = sales_connector.get_performance_data()
     
     # Defaults
     if "campaigns" in sales_payload:
-        global_cap_daily = sales_payload.get("global_cap")
-        global_cap_weekly = sales_payload.get("global_cap_weekly")
+        daily_cap = sales_payload.get("global_cap", 0) or 0
+        weekly_cap = sales_payload.get("global_cap_weekly", 0) or 0
     else:
-        global_cap_daily = None
-        global_cap_weekly = None
+        daily_cap = 0
+        weekly_cap = 0
 
-    # 2. Calculate Current Usage
-    ad_campaigns = ad_connector.get_campaigns()
-    total_leads_daily_current = 0
-    
-    for cid, a_data in ad_campaigns.items():
-        budget = a_data.get("daily_budget", 0)
-        total_leads_daily_current += (budget / 20.0)
-        
     return {
-        "daily": {
-            "cap": global_cap_daily,
-            "current": total_leads_daily_current,
-            "unit": "Leads/Day"
-        },
-        "weekly": {
-            "cap": global_cap_weekly,
-            "current": total_leads_daily_current * 5,
-            "unit": "Leads/Week"
-        }
+        "daily_target": daily_cap,
+        "weekly_target": weekly_cap
     }
 
 @app.post("/api/checkout")

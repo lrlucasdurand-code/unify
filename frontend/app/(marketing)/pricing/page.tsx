@@ -15,6 +15,8 @@ function PricingContent() {
     const searchParams = useSearchParams();
     const autoCheckoutPlan = searchParams.get("checkout_plan");
 
+    const [showContactModal, setShowContactModal] = useState(false);
+
     useEffect(() => {
         if (isAuthenticated && autoCheckoutPlan === "starter") {
             // Remove the param to prevent loop/double trigger
@@ -27,7 +29,7 @@ function PricingContent() {
 
     const handleCheckout = async (plan: "starter" | "enterprise") => {
         if (plan === "enterprise") {
-            // For enterprise, just show contact info or redirect
+            setShowContactModal(true);
             return;
         }
 
@@ -56,7 +58,8 @@ function PricingContent() {
                 headers["Authorization"] = `Bearer ${token}`;
             }
 
-            const response = await fetch("http://127.0.0.1:8000/api/checkout", {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+            const response = await fetch(`${apiUrl}/api/checkout`, {
                 method: "POST",
                 headers: headers,
                 body: JSON.stringify({
@@ -162,6 +165,7 @@ function PricingContent() {
                         </ul>
 
                         <button
+                            onClick={() => handleCheckout("enterprise")}
                             className="w-full py-4 rounded-xl font-bold bg-white text-black hover:bg-white/90 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 shadow-lg shadow-white/10"
                         >
                             Contact Sales <ArrowRight size={18} />
@@ -177,6 +181,140 @@ function PricingContent() {
                     </p>
                 </div>
             </main>
+
+            {/* Contact Sales Modal */}
+            {showContactModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <ContactModal onClose={() => setShowContactModal(false)} />
+                </div>
+            )}
+        </div>
+    );
+}
+
+function ContactModal({ onClose }: { onClose: () => void }) {
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        phone: "",
+        message: ""
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+            const res = await fetch(`${apiUrl}/contact`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+
+            if (res.ok) {
+                setSuccess(true);
+            } else {
+                alert("Failed to send message. Please try again.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error sending message.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (success) {
+        return (
+            <div className="bg-[#0f0c29] border border-white/10 rounded-2xl p-8 max-w-md w-full relative shadow-2xl animate-in zoom-in-95 duration-200 text-center">
+                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-400">
+                    <Check size={32} />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Message Sent!</h3>
+                <p className="text-muted-foreground mb-6">
+                    Thanks for reaching out. We have received your request and will contact you shortly via email or phone.
+                </p>
+                <button
+                    onClick={onClose}
+                    className="w-full py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium transition-colors"
+                >
+                    Close
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-[#0f0c29] border border-white/10 rounded-2xl p-8 max-w-md w-full relative shadow-2xl animate-in zoom-in-95 duration-200">
+            <button
+                onClick={onClose}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            >
+                ✕
+            </button>
+
+            <h3 className="text-2xl font-bold text-white mb-2">Contact Sales</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+                Tell us about your needs and we'll build a custom plan for you.
+            </p>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <label className="block text-xs font-medium text-gray-300 mb-1">Full Name</label>
+                    <input
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-primary/50 text-sm"
+                        placeholder="John Doe"
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs font-medium text-gray-300 mb-1">Email Address</label>
+                    <input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-primary/50 text-sm"
+                        placeholder="name@company.com"
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs font-medium text-gray-300 mb-1">Phone Number</label>
+                    <input
+                        type="tel"
+                        required
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-primary/50 text-sm"
+                        placeholder="+33 6 12 34 56 78"
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs font-medium text-gray-300 mb-1">Message (Optional)</label>
+                    <textarea
+                        value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-primary/50 text-sm min-h-[80px]"
+                        placeholder="Tell us more about your monthly ad spend..."
+                    />
+                </div>
+
+                <div className="pt-2">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-3 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
+                    >
+                        {loading ? <Loader2 className="animate-spin" size={18} /> : "Send Request"}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 }
