@@ -22,6 +22,7 @@ env/
 htmlcov/
 backend/antigravity.db
 backend/database.db
+database.db
 
 # Node / Frontend
 node_modules/
@@ -41,3 +42,8 @@ postgres_data/
 # IDE
 .vscode/
 .idea/
+# Credentials & Secrets
+token.json
+token.txt
+backend/credentials.json
+backend/service_account.json
