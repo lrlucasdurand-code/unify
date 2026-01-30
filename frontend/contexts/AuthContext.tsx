@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const fetchUser = async (token: string) => {
         try {
-            const res = await fetch("http://127.0.0.1:8000/api/me", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         formData.append("username", username);
         formData.append("password", password);
 
-        const res = await fetch("http://127.0.0.1:8000/token", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/token`, {
             method: "POST",
             body: formData,
         });
