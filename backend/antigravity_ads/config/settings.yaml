@@ -1,0 +1,50 @@
+ad_platforms:
+  google:
+    access_token: ''
+    ad_account_id: ''
+    app_id: ''
+    app_secret: ''
+    dry_run: true
+    enabled: true
+  meta:
+    access_token: ''
+    ad_account_id: ''
+    app_id: ''
+    app_secret: ''
+    dry_run: true
+    enabled: true
+  snap:
+    access_token: ''
+    ad_account_id: ''
+    app_id: ''
+    app_secret: ''
+    dry_run: true
+    enabled: true
+  tiktok:
+    access_token: ''
+    ad_account_id: ''
+    app_id: ''
+    app_secret: ''
+    dry_run: true
+    enabled: false
+billing:
+  current_plan: starter
+  status: active
+bot_settings:
+  auto_scaling_enabled: true
+  global_budget_cap: 5000
+  optimization_frequency: daily
+  target_roas: 2.5
+crm:
+  hubspot:
+    enabled: false
+  pipedrive:
+    enabled: false
+  salesforce:
+    enabled: false
+custom_integrations: []
+google_sheets:
+  drive_folder_id: 1p3zY9o80s85sbiE134ZGwH2CupusLXF3
+  range_name: Feuille 1!A2:C
+  spreadsheet_id: 1zONHyOQtwWs74BbrbUuTtAAh_A9Xy9IX6qmZwBcbo8g
+sales_source_type: google_sheets

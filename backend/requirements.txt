@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-dotenv
+stripe
+pyyaml
+pandas
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+facebook_business
+sqlmodel
+bcrypt
+python-jose[cryptography]
+python-multipart
+psycopg2-binary
+email-validator
