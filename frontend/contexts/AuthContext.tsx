@@ -1,87 +1,101 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/lib/supabase";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 interface User {
     email: string;
     role: "user" | "admin";
     organization: string | null;
     plan: string;
+    id: string;
 }
 
 interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
     user: User | null;
-    login: (email: string, password: string) => Promise<void>;
-    logout: () => void;
+    loginWithGoogle: () => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_TOKEN_KEY = "antigravity_token";
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const router = useRouter();
 
-    const fetchUser = async (token: string) => {
+    const fetchAppUser = async (sbUser: SupabaseUser) => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
-                headers: { Authorization: `Bearer ${token}` }
+            // In a real app, we would fetch extra profile data from our backend
+            // For now, we simulate the profile structure based on Supabase data
+            const token = (await supabase.auth.getSession()).data.session?.access_token;
+
+            // Optional: Sync user to backend if needed
+            // await fetch("/api/users/sync", { headers: { Authorization: `Bearer ${token}` } });
+
+            setUser({
+                id: sbUser.id,
+                email: sbUser.email!,
+                role: "user", // Default
+                organization: sbUser.user_metadata?.company_name || "My Organization",
+                plan: "free" // Default or fetched from DB
             });
-            if (res.ok) {
-                const userData = await res.json();
-                setUser(userData);
-                setIsAuthenticated(true);
-            } else {
-                logout();
-            }
-        } catch (e) {
-            logout();
-        } finally {
-            setIsLoading(false);
+        } catch (error) {
+            console.error("Error fetching user profile:", error);
+            setUser(null);
         }
     };
 
     useEffect(() => {
-        const token = localStorage.getItem(AUTH_TOKEN_KEY);
-        if (token) {
-            fetchUser(token);
-        } else {
+        // 1. Check active session
+        const initSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                await fetchAppUser(session.user);
+            }
             setIsLoading(false);
-        }
-    }, []);
+        };
 
-    const login = async (username: string, password: string) => {
-        const formData = new FormData();
-        formData.append("username", username);
-        formData.append("password", password);
+        initSession();
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/token`, {
-            method: "POST",
-            body: formData,
+        // 2. Listen for changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session?.user) {
+                await fetchAppUser(session.user);
+                setIsLoading(false);
+            } else {
+                setUser(null);
+                setIsLoading(false);
+            }
         });
 
-        if (!res.ok) {
-            const error = await res.json();
-            throw new Error(error.detail || "Login failed");
-        }
+        return () => subscription.unsubscribe();
+    }, []);
 
-        const data = await res.json();
-        localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
-        await fetchUser(data.access_token);
+    const loginWithGoogle = async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+                redirectTo: `${window.location.origin}/dashboard`
+            }
+        });
+        if (error) throw error;
     };
 
-    const logout = () => {
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        setIsAuthenticated(false);
+    const logout = async () => {
+        await supabase.auth.signOut();
         setUser(null);
+        router.push("/login");
     };
+
+    const isAuthenticated = !!user;
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, isLoading, user, login, logout }}>
+        <AuthContext.Provider value={{ isAuthenticated, isLoading, user, loginWithGoogle, logout }}>
             {children}
         </AuthContext.Provider>
     );

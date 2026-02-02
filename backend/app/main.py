@@ -55,29 +55,87 @@ from datetime import timedelta
 
 # --- Auth & Dependencies ---
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from supabase import create_client, Client
+import os
 
-def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Depends(get_session)):
-    from jose import jwt, JWTError
-    from app.auth import SECRET_KEY, ALGORITHM
+security = HTTPBearer()
+
+# Initialize Supabase Client for Backend
+# We use the ANON key here because we just want to verify the JWT signature 
+# which the client library handles, OR we use it to call getUser()
+SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "")
+
+def get_supabase_client() -> Client:
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        # Fallback for build time or if not configured yet
+        return None
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), session: Session = Depends(get_session)):
+    token = credentials.credentials
+    supabase = get_supabase_client()
     
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    if not supabase:
+        # If Supabase is not configured, deny access
+        print("Supabase credentials missing in backend")
+        raise credentials_exception
+
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
+        # Verify Token with Supabase
+        user_response = supabase.auth.get_user(token)
+        
+        if not user_response or not user_response.user:
             raise credentials_exception
-    except JWTError:
+            
+        sb_user = user_response.user
+        email = sb_user.email
+        
+    except Exception as e:
+        print(f"Auth Error: {e}")
         raise credentials_exception
         
+    # Sync User with Local DB
+    # We use the email to find/create the user in our Postgres DB
+    # so we can link data (Organizations, Campaigns, etc.)
     statement = select(User).where(User.email == email)
     user = session.exec(statement).first()
-    if user is None:
-        raise credentials_exception
+    
+    if not user:
+        # Auto-create user in local DB if they exist in Supabase but not here
+        # This simplifies the flow (no separate register endpoint needed for backend)
+        
+        # Check if we should auto-join an organization or create one?
+        # For now, create a default organization based on metadata if available
+        company_name = sb_user.user_metadata.get("company_name", "My Organization")
+        full_name = sb_user.user_metadata.get("full_name", email.split("@")[0])
+        
+        # Create Org
+        org = Organization(name=company_name)
+        session.add(org)
+        session.commit()
+        session.refresh(org)
+        
+        # Create User
+        user = User(
+            email=email,
+            hashed_password="supabase_managed", # Dummy
+            full_name=full_name,
+            organization_id=org.id,
+            is_superuser=False,
+            role="user"
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        
     return user
 
 # --- Data Models ---

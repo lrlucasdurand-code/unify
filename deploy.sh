@@ -4,6 +4,13 @@
 
 echo "🚀 Starting Deployment..."
 
+# Check for required env vars
+if ! grep -q "NEXT_PUBLIC_SUPABASE_URL" .env; then
+  echo "❌ Error: NEXT_PUBLIC_SUPABASE_URL missing in .env"
+  exit 1
+fi
+
+
 # 1. Pull latest code
 echo "📥 Pulling latest changes from git..."
 git pull origin main

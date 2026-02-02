@@ -5,10 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Rocket, ArrowRight, Loader2, Sparkles, Building, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 function SignupContent() {
     const router = useRouter();
-    const { isAuthenticated, isLoading, login } = useAuth(); // We'll manually login after register
+    const { isAuthenticated, isLoading, loginWithGoogle } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -38,33 +39,48 @@ function SignupContent() {
         setError("");
 
         try {
-            // 1. Register
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    full_name: fullName,
-                    company_name: companyName
-                }),
+            // Register with Supabase
+            const { error: signUpError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: fullName,
+                        company_name: companyName,
+                    }
+                }
             });
 
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.detail || "Registration failed");
-            }
+            if (signUpError) throw signUpError;
 
-            // 2. Login (Auto-login)
-            await login(email, password);
-            // Redirect handled by useEffect
+            // Auto-login (if email confirmation is disabled in Supabase, this works immediately)
+            // If email confirmation is ON, we should tell the user to check their email.
+            // For now, assuming disabled or immediate processing:
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (signInError) {
+                // If sign in fails (e.g. email not confirmed), just show message
+                alert("Account created! Please check your email to confirm.");
+            } else {
+                router.push("/dashboard");
+            }
 
         } catch (err: any) {
             setError(err.message || "Registration failed");
             setLoading(false);
         } finally {
-            // setLoading(false); // handled in catch or if success, we redirect
             if (!isAuthenticated) setLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        try {
+            await loginWithGoogle();
+        } catch (err: any) {
+            setError(err.message || "Google login failed");
         }
     };
 
@@ -109,6 +125,42 @@ function SignupContent() {
                             </div>
                             <h2 className="text-2xl font-bold text-white mb-2">Create Account</h2>
                             <p className="text-muted-foreground text-sm">Join the future of ad automation.</p>
+                        </div>
+
+                        {/* Google Login Button */}
+                        <button
+                            onClick={handleGoogleLogin}
+                            type="button"
+                            className="w-full bg-white text-black hover:bg-gray-100 font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 mb-6"
+                        >
+                            <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                <path
+                                    fill="currentColor"
+                                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                />
+                                <path
+                                    fill="currentColor"
+                                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                />
+                                <path
+                                    fill="currentColor"
+                                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                                />
+                                <path
+                                    fill="currentColor"
+                                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                />
+                            </svg>
+                            Sign up with Google
+                        </button>
+
+                        <div className="relative mb-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-white/10"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-[#030014] px-2 text-muted-foreground">Or with email</span>
+                            </div>
                         </div>
 
                         <form onSubmit={handleSignup} className="space-y-4">

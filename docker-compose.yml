@@ -6,16 +6,19 @@ services:
     expose:
       - "8000"
     environment:
-      - ALLOWED_ORIGINS=http://localhost:3000
+      - ALLOWED_ORIGINS=http://213.32.23.122,http://localhost:3000,http://localhost
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/antigravity
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - SECRET_KEY=${SECRET_KEY}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     volumes:
       - ./backend/antigravity.db:/app/antigravity.db
     env_file:
       - ./backend/.env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:15-alpine
@@ -27,6 +30,11 @@ services:
       - POSTGRES_DB=antigravity
     ports:
       - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build:
@@ -35,6 +43,8 @@ services:
       args:
         NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID: ${NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID}
         NEXT_PUBLIC_API_URL: /api
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     expose:
       - "3000"
     environment:
