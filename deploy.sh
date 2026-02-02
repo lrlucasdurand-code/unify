@@ -18,6 +18,8 @@ if [ -f .env ]; then
     cp .env backend/.env
 fi
 
+# Force full rebuild to ensure ARGs are picked up
+docker compose build --no-cache frontend
 docker compose up --build -d
 
 # 3. Cleanup unused images (optional, keeps disk clean)

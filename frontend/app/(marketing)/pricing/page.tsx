@@ -58,7 +58,7 @@ function PricingContent() {
                 headers["Authorization"] = `Bearer ${token}`;
             }
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
             const response = await fetch(`${apiUrl}/api/checkout`, {
                 method: "POST",
                 headers: headers,
@@ -207,7 +207,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
         setLoading(true);
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
             const res = await fetch(`${apiUrl}/contact`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
