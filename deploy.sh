@@ -46,7 +46,7 @@ export $(grep -v '^#' .env | xargs)
 docker builder prune -f
 
 docker compose build --no-cache frontend
-docker compose up --build -d
+docker compose up --build -d --remove-orphans
 
 # 3. Cleanup unused images
 echo "🧹 Cleaning up old images..."

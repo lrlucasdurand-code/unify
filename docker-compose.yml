@@ -6,7 +6,7 @@ services:
     expose:
       - "8000"
     environment:
-      - ALLOWED_ORIGINS=http://213.32.23.122,http://localhost:3000,http://localhost
+      - ALLOWED_ORIGINS=https://useunify.io,https://www.useunify.io,http://localhost:3000,http://localhost
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/antigravity
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - SECRET_KEY=${SECRET_KEY}
