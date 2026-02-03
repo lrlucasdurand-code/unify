@@ -14,7 +14,7 @@ export default function SettingsPage() {
         const token = localStorage.getItem("antigravity_token");
         const headers = { Authorization: `Bearer ${token}` };
 
-        fetch("http://localhost:8000/api/config", { headers })
+        fetch("/api/config", { headers })
             .then((res) => {
                 if (!res.ok) throw new Error("Failed to load config");
                 return res.json();
@@ -44,7 +44,7 @@ export default function SettingsPage() {
         const token = localStorage.getItem("antigravity_token");
 
         try {
-            const res = await fetch("http://localhost:8000/api/config", {
+            const res = await fetch("/api/config", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
