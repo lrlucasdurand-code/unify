@@ -1,6 +1,6 @@
 useunify.io, www.useunify.io {
-    # Backend API (strip /api prefix)
-    handle_path /api/* {
+    # Backend API (preserve /api prefix)
+    handle /api/* {
         reverse_proxy backend:8000
     }
 

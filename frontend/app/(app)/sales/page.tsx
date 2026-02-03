@@ -18,11 +18,11 @@ export default function SalesPage() {
 
         // Fetch config and service account email in parallel
         Promise.all([
-            fetch("http://127.0.0.1:8000/api/config", { headers }).then(res => {
+            fetch("/api/config", { headers }).then(res => {
                 if (!res.ok) throw new Error("Failed to load config");
                 return res.json();
             }),
-            fetch("http://127.0.0.1:8000/api/sheets/service-account", { headers }).then(res => res.json()).catch(() => ({}))
+            fetch("/api/sheets/service-account", { headers }).then(res => res.json()).catch(() => ({}))
         ]).then(([configData, saData]) => {
             // Ensure google_sheets structure exists
             if (!configData.google_sheets) {
@@ -60,7 +60,7 @@ export default function SalesPage() {
         const token = localStorage.getItem("antigravity_token");
 
         try {
-            const res = await fetch("http://127.0.0.1:8000/api/sheets/create", {
+            const res = await fetch("/api/sheets/create", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -108,7 +108,7 @@ export default function SalesPage() {
         const token = localStorage.getItem("antigravity_token");
 
         try {
-            const res = await fetch("http://127.0.0.1:8000/api/config", {
+            const res = await fetch("/api/config", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
