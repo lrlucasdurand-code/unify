@@ -36,13 +36,13 @@ export default function Home() {
     const headers = { Authorization: `Bearer ${token}` };
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/campaigns", { headers });
-      if (!res.ok) throw new Error("Failed to fetch");
+      const res = await fetch("/api/campaigns", { headers });
+      if (!res.ok) throw new Error("Failed");
       const data = await res.json();
       setCampaigns(data);
 
       // Fetch Global Status
-      const resStatus = await fetch("http://127.0.0.1:8000/api/global-status", { headers });
+      const resStatus = await fetch("/api/global-status", { headers });
       if (resStatus.ok) {
         setGlobalStatus(await resStatus.json());
       }
@@ -61,7 +61,7 @@ export default function Home() {
     const headers = { Authorization: `Bearer ${token}` };
 
     fetchCampaigns();
-    fetch("http://127.0.0.1:8000/api/config", { headers })
+    fetch("/api/config", { headers })
       .then(res => res.json())
       .then(setConfig);
   }, []);

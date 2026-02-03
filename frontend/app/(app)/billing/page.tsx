@@ -20,8 +20,8 @@ export default function BillingPage() {
 
             try {
                 const [configRes, invoicesRes] = await Promise.all([
-                    fetch("http://127.0.0.1:8000/api/config", { headers }),
-                    fetch("http://127.0.0.1:8000/api/billing/invoices", { headers })
+                    fetch("/api/config", { headers }),
+                    fetch("/api/billing/invoices", { headers })
                 ]);
 
                 if (configRes.ok) {
