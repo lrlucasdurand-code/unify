@@ -136,6 +136,14 @@ export default function IntegrationsPage() {
             })
             .catch(e => {
                 console.error("Config fetch error", e);
+                // Fallback config to prevent crash
+                setConfig({
+                    ad_platforms: {
+                        meta: { enabled: false },
+                        google: { enabled: false },
+                        snap: { enabled: false }
+                    }
+                });
                 setLoading(false);
             });
     }, []);
@@ -166,6 +174,14 @@ export default function IntegrationsPage() {
             console.error("Error saving toggle", e);
         }
     };
+
+    // Defensive check: if loading is false but config is still null (should be handled by catch, but just in case)
+    if (!config && !loading) return (
+        <div className="flex h-[80vh] items-center justify-center flex-col">
+            <div className="text-red-400 font-medium mb-2">Failed to load configuration.</div>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-white/10 rounded-lg text-sm">Retry</button>
+        </div>
+    );
 
     if (loading) return (
         <div className="flex h-[80vh] items-center justify-center">

@@ -62,8 +62,12 @@ export default function Home() {
 
     fetchCampaigns();
     fetch("/api/config", { headers })
-      .then(res => res.json())
-      .then(setConfig);
+      .then(res => {
+        if (!res.ok) return {};
+        return res.json();
+      })
+      .then(setConfig)
+      .catch(() => setConfig({}));
   }, []);
 
   const isDemoMode = config?.billing?.status !== "active";

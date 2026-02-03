@@ -34,6 +34,15 @@ export default function SettingsPage() {
             })
             .catch(e => {
                 console.error("Config fetch error", e);
+                // Fallback to prevent crash
+                setConfig({
+                    bot_settings: {
+                        global_budget_cap: 5000,
+                        target_roas: 2.5,
+                        optimization_frequency: "daily",
+                        auto_scaling_enabled: true
+                    }
+                });
                 setLoading(false);
             });
     }, []);
@@ -74,6 +83,13 @@ export default function SettingsPage() {
             }
         });
     };
+
+    if (!config && !loading) return (
+        <div className="flex h-[80vh] items-center justify-center flex-col">
+            <div className="text-red-400 font-medium mb-2">Failed to load settings.</div>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-white/10 rounded-lg text-sm">Retry</button>
+        </div>
+    );
 
     if (loading) return (
         <div className="flex h-[80vh] items-center justify-center">

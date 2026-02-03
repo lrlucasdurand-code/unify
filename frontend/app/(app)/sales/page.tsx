@@ -45,6 +45,12 @@ export default function SalesPage() {
             setLoading(false);
         }).catch(e => {
             console.error("Sales fetch error", e);
+            // Fallback
+            setConfig({
+                google_sheets: { spreadsheet_id: "", range_name: "Feuille 1!A2:C" },
+                sales_source_type: "google_sheets",
+                crm: { hubspot: { enabled: false }, salesforce: { enabled: false }, pipedrive: { enabled: false } }
+            });
             setLoading(false);
         });
     }, []);
@@ -145,6 +151,13 @@ export default function SalesPage() {
         newConfig.google_sheets[field] = value;
         handleSaveConfig(newConfig);
     };
+
+    if (!config && !loading) return (
+        <div className="flex h-[80vh] items-center justify-center flex-col">
+            <div className="text-red-400 font-medium mb-2">Failed to load sales configuration.</div>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-white/10 rounded-lg text-sm">Retry</button>
+        </div>
+    );
 
     if (loading) return (
         <div className="flex h-[80vh] items-center justify-center">
