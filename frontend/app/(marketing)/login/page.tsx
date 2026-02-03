@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Rocket, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
     const router = useRouter();
-    const { isAuthenticated, isLoading, login } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [email, setEmail] = useState("");
@@ -27,7 +28,11 @@ export default function LoginPage() {
         setError("");
 
         try {
-            await login(email, password);
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            if (error) throw error;
             // Redirect handled by useEffect or manually here
             router.push("/dashboard");
         } catch (err: any) {
