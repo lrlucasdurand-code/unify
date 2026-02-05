@@ -10,7 +10,7 @@ import { MarketingHeader } from "@/components/MarketingHeader";
 
 function PricingContent() {
     const router = useRouter();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
     const [loading, setLoading] = useState(false);
     const searchParams = useSearchParams();
     const autoCheckoutPlan = searchParams.get("checkout_plan");
@@ -41,44 +41,16 @@ function PricingContent() {
         setLoading(true);
 
         try {
-            // Get the Stripe price ID from environment variable
-            const priceId = process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID;
+            // Direct Stripe Link Integration (Bypassing Backend)
+            let checkoutUrl = "https://buy.stripe.com/9B63cvdis16l2Z937GcjS02";
 
-            if (!priceId) {
-                console.error("Stripe price ID not configured");
-                setLoading(false);
-                return;
+            // Prefill email if available
+            if (user?.email) {
+                checkoutUrl += `?prefilled_email=${encodeURIComponent(user.email)}`;
             }
 
-            const token = localStorage.getItem("antigravity_token");
-            const headers: HeadersInit = {
-                "Content-Type": "application/json"
-            };
-            if (token) {
-                headers["Authorization"] = `Bearer ${token}`;
-            }
+            window.location.href = checkoutUrl;
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-            const response = await fetch(`${apiUrl}/api/checkout`, {
-                method: "POST",
-                headers: headers,
-                body: JSON.stringify({
-                    price_id: priceId,
-                    success_url: `${window.location.origin}/checkout/success?plan=${plan}`,
-                    cancel_url: `${window.location.origin}/checkout/cancel`,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.url) {
-                // Redirect to Stripe Checkout
-                window.location.href = data.url;
-            } else {
-                console.error("No checkout URL returned. Backend response:", data);
-                alert(`Checkout failed: ${data.detail || "Unknown error"}`);
-                setLoading(false);
-            }
         } catch (error) {
             console.error("Checkout error:", error);
             setLoading(false);
