@@ -32,7 +32,7 @@ export function Sidebar() {
                 <div className="p-2 bg-primary rounded-lg">
                     <Rocket size={20} className="text-white" />
                 </div>
-                <span className="font-bold text-xl tracking-tight">Antigravity</span>
+                <span className="font-bold text-xl tracking-tight">Unify</span>
             </div>
 
             <nav className="space-y-2">

@@ -14,7 +14,7 @@ export function MarketingHeader() {
             <Link href="/" className="flex items-center gap-2">
                 <Rocket size={20} className="text-white" />
                 <span className="font-bold text-lg tracking-tight text-white">
-                    Antigravity
+                    Unify
                 </span>
             </Link>
             <div className="flex gap-4">

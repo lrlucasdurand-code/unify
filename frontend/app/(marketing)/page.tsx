@@ -35,7 +35,7 @@ export default function LandingPage() {
                     Let our AI adjust budgets in <span className="text-white font-medium">real-time</span> to maximize ROI.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 mb-24">
+                <div className="flex flex-col sm:flex-row gap-4 mb-16">
                     <Link href="/pricing" className="px-8 py-3.5 rounded-full bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-all shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_50px_rgba(168,85,247,0.5)] hover:-translate-y-0.5 flex items-center gap-2">
                         <Rocket size={16} />
                         View Pricing
@@ -44,6 +44,27 @@ export default function LandingPage() {
                         <Rocket size={16} />
                         Launch Demo
                     </Link>
+                </div>
+
+                {/* Promo Video */}
+                <div className="w-full max-w-4xl mx-auto mb-24 relative z-20 group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                    <div className="relative aspect-video bg-black/50 border border-white/10 rounded-xl overflow-hidden shadow-2xl flex items-center justify-center backdrop-blur-sm">
+
+                        <video
+                            className="w-full h-full object-cover"
+                            controls
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            poster="/placeholder-video-poster.jpg" // Optional: we can add this later if needed
+                        >
+                            <source src="/demo.mp4" type="video/mp4" />
+                            Your browser does not support the video tag.
+                        </video>
+
+                    </div>
                 </div>
 
                 {/* Feature Grid - Cleaner */}
@@ -70,7 +91,7 @@ export default function LandingPage() {
             </main>
 
             <footer className="py-8 text-center text-xs text-muted-foreground border-t border-white/5 bg-black/20 backdrop-blur-xl relative z-10">
-                <p>© 2026 Antigravity. Built for the future of advertising.</p>
+                <p>© 2026 Unify. Built for the future of advertising.</p>
             </footer>
         </div>
     );
